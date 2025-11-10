@@ -75,6 +75,49 @@ docker run -it --init --rm --network host ekzhang/bore <ARGS>
 
 This section describes detailed usage for the `bore` CLI command.
 
+### Optional: HTTP API for Local Tunnel Discovery
+
+Some builds of `bore` provide an optional lightweight HTTP API that exposes
+the current tunnel information for programmatic discovery. This is useful
+when another process (e.g., a setup UI or automation) needs to learn the
+public URL assigned by the remote server without parsing logs.
+
+- Enable the API by providing an API port to the `local` subcommand:
+
+```shell
+bore local 8081 --to bore.pub --api-port 4040
+```
+
+- The API listens on the specified port (default bind `0.0.0.0`) and exposes:
+
+  - `GET /api/tunnel` – returns JSON describing the current tunnel
+  - `GET /health` – returns basic health JSON
+
+- Example response from `GET /api/tunnel`:
+
+```json
+{
+  "status": "connected",
+  "server": "bore.pub",
+  "remote_port": 51969,
+  "public_url": "bore.pub:51969"
+}
+```
+
+If the tunnel is not yet established, the API returns:
+
+```json
+{
+  "status": "not_connected",
+  "error": "Tunnel not established yet"
+}
+```
+
+Notes:
+- The API is optional and only available in builds that include it.
+- The API surface is intentionally minimal and stable for basic tunnel discovery.
+- The `public_url` is a convenience string combining `server` and `remote_port`.
+
 ### Local Forwarding
 
 You can forward a port on your local machine by using the `bore local` command. This takes a positional argument, the local port to forward, as well as a mandatory `--to` option, which specifies the address of the remote server.
