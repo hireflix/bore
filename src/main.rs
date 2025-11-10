@@ -1,8 +1,10 @@
 use std::net::IpAddr;
+use std::sync::Arc;
 
 use anyhow::Result;
-use bore_cli::{client::Client, server::Server};
+use bore_cli::{api::{start_api_server, TunnelInfo}, client::Client, server::Server};
 use clap::{error::ErrorKind, CommandFactory, Parser, Subcommand};
+use tokio::sync::RwLock;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
@@ -34,6 +36,10 @@ enum Command {
         /// Optional secret for authentication.
         #[clap(short, long, env = "BORE_SECRET", hide_env_values = true)]
         secret: Option<String>,
+
+        /// Optional HTTP API port to expose tunnel information.
+        #[clap(long, env = "BORE_API_PORT")]
+        api_port: Option<u16>,
     },
 
     /// Runs the remote proxy server.
@@ -69,8 +75,27 @@ async fn run(command: Command) -> Result<()> {
             to,
             port,
             secret,
+            api_port,
         } => {
             let client = Client::new(&local_host, local_port, &to, port, secret.as_deref()).await?;
+            
+            // Start API server if requested
+            if let Some(api_port) = api_port {
+                let tunnel_info = Arc::new(RwLock::new(Some(TunnelInfo {
+                    server_addr: to.clone(),
+                    remote_port: client.remote_port(),
+                })));
+                
+                let api_tunnel_info = Arc::clone(&tunnel_info);
+                tokio::spawn(async move {
+                    if let Err(e) = start_api_server(api_port, api_tunnel_info).await {
+                        tracing::error!("API server error: {}", e);
+                    }
+                });
+                
+                info!("API server available at http://0.0.0.0:{}/api/tunnel", api_port);
+            }
+            
             client.listen().await?;
         }
         Command::Server {
