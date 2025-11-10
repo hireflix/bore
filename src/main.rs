@@ -5,6 +5,7 @@ use anyhow::Result;
 use bore_cli::{api::{start_api_server, TunnelInfo}, client::Client, server::Server};
 use clap::{error::ErrorKind, CommandFactory, Parser, Subcommand};
 use tokio::sync::RwLock;
+use tracing::info;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
