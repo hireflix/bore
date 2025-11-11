@@ -3,6 +3,8 @@
 [![Build status](https://img.shields.io/github/actions/workflow/status/ekzhang/bore/ci.yml)](https://github.com/ekzhang/bore/actions)
 [![Crates.io](https://img.shields.io/crates/v/bore-cli.svg)](https://crates.io/crates/bore-cli)
 
+> **Note:** This is a fork of [ekzhang/bore](https://github.com/ekzhang/bore) with an added HTTP API for programmatic tunnel discovery. The API exposes tunnel information at `GET /api/tunnel` when started with the `--api-port` flag.
+
 A modern, simple TCP tunnel in Rust that exposes local ports to a remote server, bypassing standard NAT connection firewalls. **That's all it does: no more, and no less.**
 
 ![Video demo](https://i.imgur.com/vDeGsmx.gif)
